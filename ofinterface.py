@@ -27,7 +27,7 @@ def actions_from_routemod(ofproto, parser, action_tlvs):
                 actions.append(parser.OFPActionPopVlan())
             actions.append(parser.OFPActionPushVlan(0x8100));
             vlan_id = bin_to_int(action._value)
-            vlan = parser.OFPMatchField.make(ofproto.OXM_OF_VLAN_VID, vlan_id)
+            vlan = parser.OFPMatchField.make(ofproto.OXM_OF_VLAN_VID, vlan_id|ofproto.OFPVID_PRESENT)
             actions.append(parser.OFPActionSetField(vlan))
             pcp = parser.OFPMatchField.make(ofproto.OXM_OF_VLAN_PCP, 0)
             actions.append(parser.OFPActionSetField(pcp))
@@ -43,6 +43,8 @@ def actions_from_routemod(ofproto, parser, action_tlvs):
         elif action._type == RFAT_STRIP_VLAN_DEFERRED:
             instructions.append(parser.OFPInstructionActions(
                 ofproto.OFPIT_WRITE_ACTIONS, (parser.OFPActionPopVlan(),)))
+        elif action._type == RFAT_STRIP_VLAN:
+            actions.append(parser.OFPActionPopVlan())
         elif action.optional():
             log.info("Dropping unsupported Action (type: %s)" % action._type)
         else:
@@ -178,7 +180,7 @@ def add_matches(flow_mod, matches):
         elif match._type == RFMT_IN_PORT:
             flow_mod.match.set_in_port(bin_to_int(match._value))
         elif match._type == RFMT_VLAN_ID:
-            flow_mod.match.set_vlan_vid(bin_to_int(match._value))
+            flow_mod.match.set_vlan_vid(bin_to_int(match._value)|flow_mod.datapath.ofproto.OFPVID_PRESENT)
         elif TLV.optional(match):
             log.info("Dropping unsupported Match (type: %s)" % match._type)
         else:
