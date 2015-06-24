@@ -7,7 +7,7 @@ from rflib.types.Action import *
 from rflib.types.Option import *
 
 OFP_BUFFER_NONE = 0xffffffff
-
+ROUTEFLOW_COOKIE = 0x12007EF103
 
 def actions_from_routemod(ofproto, parser, action_tlvs):
     instructions = []
@@ -74,7 +74,7 @@ def create_group_mod(dp, command, group, action_tlvs, weight=0,type_=None):
     return parser.OFPGroupMod(dp, command, type_, group, buckets)
 
 
-def create_default_flow_mod(dp, cookie=0, cookie_mask=0, table_id=0,
+def create_default_flow_mod(dp, cookie=ROUTEFLOW_COOKIE, cookie_mask=0xFFFFFFFFFFFFFFFF, table_id=0,
                             command=None, idle_timeout=0, hard_timeout=0,
                             priority=None,
                             buffer_id=OFP_BUFFER_NONE, match=None, actions=None,
@@ -115,7 +115,7 @@ def create_flow_mod(dp, table_id, mod, matches, actions, options):
     parser = dp.ofproto_parser
     flow_mod = None
     if mod == RMT_DELETE and table_id == 0 and len(matches) == 0 and len(actions) == 0:
-        return parser.OFPFlowMod(dp, 0, 0,
+        return parser.OFPFlowMod(dp, ROUTEFLOW_COOKIE, 0xFFFFFFFFFFFFFFFF,
                                  ofproto.OFPTT_ALL, ofproto.OFPFC_DELETE,
                                  0, 0, 0, OFP_BUFFER_NONE,
                                  ofproto.OFPP_ANY,
